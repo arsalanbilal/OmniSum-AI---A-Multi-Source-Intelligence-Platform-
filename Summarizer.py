@@ -883,13 +883,7 @@ with st.expander("📖 How to use this tool"):
     - Supports: English, Spanish, French, German, Hindi, Chinese, Japanese, Arabic, Portuguese, Russian
     
     **📋 NEW: JSON File Support**
-    - Upload JSON files for summarization
-    - Handles complex nested JSON structures
-    - Converts JSON to readable text format
-    
-    **🔧 API Key Information:**
-    - **Groq API**: Free tier available at [console.groq.com](https://console.groq.com)
-    - **Embeddings**: Free Hugging Face embeddings (no API key required)
+
     
     **📁 Supported Formats:**
     - YouTube videos (automatic transcript extraction)
