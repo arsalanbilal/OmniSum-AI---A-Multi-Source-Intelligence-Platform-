@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import openai
 import tempfile
+import json
 from langchain_groq import ChatGroq
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -20,12 +21,12 @@ import time
 
 # Streamlit UI
 st.set_page_config(
-    page_title="OmniSum AI",
+    page_title="Multi-Source AI Summarizer",
     page_icon="📚",
     layout="wide"
 )
 
-st.title("🤖 Multi-Source Intelligence Platform ")
+st.title("🤖 Multi-Source AI Summarizer")
 st.markdown("""
 This tool can summarize content from various sources including:
 - **YouTube Videos** 📹
@@ -33,6 +34,7 @@ This tool can summarize content from various sources including:
 - **CSV Files** 📊
 - **Excel Files** 📈
 - **Text Files** 📝
+- **JSON Files** 📋
 - **Web Pages** 🌐
 """)
 
@@ -73,30 +75,52 @@ except Exception as e:
     st.sidebar.error(f"❌ Error loading embeddings: {str(e)}")
     st.stop()
 
-# Updated prompt for summarization
-prompt = ChatPromptTemplate.from_template(
-    """
-    You are an expert AI assistant specialized in summarizing content from various sources.
-    
-    Based on the provided context, create a comprehensive and well-structured summary that captures:
-    - Key points and main ideas
-    - Important facts and figures
-    - Core arguments or conclusions
-    - Essential insights
-    
-    Context:
-    {context}
-    
-    Please provide a clear, concise, and informative summary of the content.
-    
-    Question/Request: {input}
-    
-    Summary:
-    """
+# Language selection in sidebar
+st.sidebar.header("🌍 Language Settings")
+summary_language = st.sidebar.selectbox(
+    "Select Summary Language:",
+    ["English", "Spanish", "French", "German", "Hindi", "Chinese", "Japanese", "Arabic", "Portuguese", "Russian"]
 )
 
+# Language mapping for prompt
+language_map = {
+    "English": "English",
+    "Spanish": "Spanish",
+    "French": "French", 
+    "German": "German",
+    "Hindi": "Hindi",
+    "Chinese": "Chinese",
+    "Japanese": "Japanese",
+    "Arabic": "Arabic",
+    "Portuguese": "Portuguese",
+    "Russian": "Russian"
+}
+
+# Dynamic prompt for multilingual summarization
+def create_prompt(language):
+    return ChatPromptTemplate.from_template(
+        f"""
+        You are an expert AI assistant specialized in summarizing content from various sources in multiple languages.
+        
+        Based on the provided context, create a comprehensive and well-structured summary in {language} that captures:
+        - Key points and main ideas
+        - Important facts and figures
+        - Core arguments or conclusions
+        - Essential insights
+        
+        Context:
+        {{context}}
+        
+        Please provide a clear, concise, and informative summary of the content in {language}.
+        
+        Question/Request: {{input}}
+        
+        Summary in {language}:
+        """
+    )
+
 def load_youtube_transcript(video_url):
-    """Load transcript from YouTube video using the correct API methods"""
+    """Load transcript from YouTube video - supports multiple languages"""
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
         from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFound, VideoUnavailable
@@ -120,25 +144,44 @@ def load_youtube_transcript(video_url):
         st.info(f"Extracted Video ID: {video_id}")
         
         try:
-            # Use your exact code with proper error handling
-            ytt_api = YouTubeTranscriptApi()
-            fetched = ytt_api.fetch(video_id, languages=["en"])
-            raw_transcript = fetched.to_raw_data()
-            transcript = " ".join(entry["text"] for entry in raw_transcript)
+            # First, list available transcripts to see languages
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            
+            # Try to get manual transcripts first, then generated
+            try:
+                # Get manual transcript in any language
+                transcript = transcript_list.find_manually_created_transcript(['en', 'es', 'fr', 'de', 'hi', 'zh', 'ja', 'ar', 'pt', 'ru'])
+                transcript_data = transcript.fetch()
+            except:
+                # Fallback to auto-generated transcript
+                try:
+                    transcript = transcript_list.find_generated_transcript(['en', 'es', 'fr', 'de', 'hi', 'zh', 'ja', 'ar', 'pt', 'ru'])
+                    transcript_data = transcript.fetch()
+                except:
+                    # Get any available transcript
+                    transcript = list(transcript_list)[0]
+                    transcript_data = transcript.fetch()
+            
+            transcript_text = " ".join([entry["text"] for entry in transcript_data])
+            language = transcript.language_code
             
             documents = [Document(
-                page_content=transcript,
-                metadata={"source": video_url, "title": f"YouTube Video {video_id}"}
+                page_content=transcript_text,
+                metadata={
+                    "source": video_url, 
+                    "title": f"YouTube Video {video_id}",
+                    "language": language
+                }
             )]
             
-            st.success("✅ YouTube transcript loaded successfully!")
+            st.success(f"✅ YouTube transcript loaded successfully! (Language: {language})")
             return documents
             
         except TranscriptsDisabled:
             st.error("❌ No captions available for this video.")
             return None
         except NoTranscriptFound:
-            st.error("❌ No transcript found in the requested language.")
+            st.error("❌ No transcript found for this video.")
             return None
         except VideoUnavailable:
             st.error("❌ The video is unavailable.")
@@ -152,7 +195,7 @@ def load_youtube_transcript(video_url):
         return None
 
 def load_pdf_file(uploaded_file):
-    """Load PDF file"""
+    """Load PDF file - supports multiple languages"""
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
@@ -163,13 +206,18 @@ def load_pdf_file(uploaded_file):
         
         # Clean up temporary file
         os.unlink(tmp_file_path)
+        
+        # Add language metadata
+        for doc in documents:
+            doc.metadata["language"] = "multilingual"  # PDFs can contain multiple languages
+        
         return documents
     except Exception as e:
         st.error(f"Error loading PDF file: {str(e)}")
         return None
 
 def load_csv_file(uploaded_file):
-    """Load CSV file"""
+    """Load CSV file - supports multiple languages"""
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
@@ -179,13 +227,18 @@ def load_csv_file(uploaded_file):
         documents = loader.load()
         
         os.unlink(tmp_file_path)
+        
+        # Add language metadata
+        for doc in documents:
+            doc.metadata["language"] = "multilingual"
+        
         return documents
     except Exception as e:
         st.error(f"Error loading CSV file: {str(e)}")
         return None
 
 def load_excel_file(uploaded_file):
-    """Load Excel file"""
+    """Load Excel file - supports multiple languages"""
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
@@ -195,13 +248,18 @@ def load_excel_file(uploaded_file):
         documents = loader.load()
         
         os.unlink(tmp_file_path)
+        
+        # Add language metadata
+        for doc in documents:
+            doc.metadata["language"] = "multilingual"
+        
         return documents
     except Exception as e:
         st.error(f"Error loading Excel file: {str(e)}")
         return None
 
 def load_text_file(uploaded_file):
-    """Load text file"""
+    """Load text file - supports multiple languages"""
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
@@ -211,16 +269,68 @@ def load_text_file(uploaded_file):
         documents = loader.load()
         
         os.unlink(tmp_file_path)
+        
+        # Add language metadata
+        for doc in documents:
+            doc.metadata["language"] = "multilingual"
+        
         return documents
     except Exception as e:
         st.error(f"Error loading text file: {str(e)}")
         return None
 
+def load_json_file(uploaded_file):
+    """Load JSON file - supports multiple languages"""
+    try:
+        # Read and parse JSON file
+        json_content = uploaded_file.getvalue().decode('utf-8')
+        json_data = json.loads(json_content)
+        
+        # Convert JSON to readable text
+        def json_to_text(data, indent=0):
+            text = ""
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    text += "  " * indent + f"{key}: "
+                    if isinstance(value, (dict, list)):
+                        text += "\n" + json_to_text(value, indent + 1)
+                    else:
+                        text += f"{value}\n"
+            elif isinstance(data, list):
+                for i, item in enumerate(data):
+                    text += "  " * indent + f"Item {i + 1}:\n"
+                    text += json_to_text(item, indent + 1)
+            else:
+                text += "  " * indent + f"{data}\n"
+            return text
+        
+        json_text = json_to_text(json_data)
+        
+        from langchain_core.documents import Document
+        documents = [Document(
+            page_content=json_text,
+            metadata={
+                "source": uploaded_file.name,
+                "language": "multilingual"
+            }
+        )]
+        
+        st.success("✅ JSON file loaded successfully!")
+        return documents
+    except Exception as e:
+        st.error(f"Error loading JSON file: {str(e)}")
+        return None
+
 def load_web_content(url):
-    """Load content from webpage"""
+    """Load content from webpage - supports multiple languages"""
     try:
         loader = WebBaseLoader(url)
         documents = loader.load()
+        
+        # Add language metadata
+        for doc in documents:
+            doc.metadata["language"] = "multilingual"
+        
         return documents
     except Exception as e:
         st.error(f"Error loading web content: {str(e)}")
@@ -243,13 +353,16 @@ def create_vector_embedding(documents):
         st.error(f"Error creating vector embeddings: {str(e)}")
         return None
 
-def summarize_content(documents, query, summary_type="comprehensive"):
-    """Generate summary using RAG approach"""
+def summarize_content(documents, query, summary_type="comprehensive", language="English"):
+    """Generate summary using RAG approach in specified language"""
     try:
         # Create vector embeddings
         vectors = create_vector_embedding(documents)
         if vectors is None:
             return None
+        
+        # Create prompt with selected language
+        prompt = create_prompt(language)
         
         # Create chains
         document_chain = create_stuff_documents_chain(llm, prompt)
@@ -272,7 +385,7 @@ def summarize_content(documents, query, summary_type="comprehensive"):
 st.sidebar.header("📥 Input Source")
 source_type = st.sidebar.selectbox(
     "Choose your content source:",
-    ["YouTube Video", "PDF File", "CSV File", "Excel File", "Text File", "Web Page"]
+    ["YouTube Video", "PDF File", "CSV File", "Excel File", "Text File", "JSON File", "Web Page"]
 )
 
 # Initialize session state for documents
@@ -334,6 +447,16 @@ elif source_type == "Text File":
                     st.session_state.documents = documents
                     st.sidebar.success(f"✅ Text content loaded successfully! ({len(documents)} documents)")
 
+elif source_type == "JSON File":
+    uploaded_json = st.sidebar.file_uploader("Upload JSON File", type=["json"])
+    if uploaded_json:
+        if st.sidebar.button("Load JSON File"):
+            with st.spinner("Loading JSON content..."):
+                documents = load_json_file(uploaded_json)
+                if documents:
+                    st.session_state.documents = documents
+                    st.sidebar.success(f"✅ JSON content loaded successfully! ({len(documents)} documents)")
+
 elif source_type == "Web Page":
     web_url = st.sidebar.text_input("Enter Web Page URL:")
     if web_url:
@@ -360,6 +483,11 @@ custom_query = st.sidebar.text_area(
 if st.session_state.documents:
     st.header("📝 Generate Summary")
     
+    # Show detected language if available
+    if hasattr(st.session_state.documents[0], 'metadata') and 'language' in st.session_state.documents[0].metadata:
+        detected_language = st.session_state.documents[0].metadata.get('language', 'Unknown')
+        st.info(f"🌐 Detected content language: {detected_language}")
+    
     # Default queries based on summary type
     default_queries = {
         "Comprehensive": "Provide a comprehensive summary covering all key aspects of the content.",
@@ -371,11 +499,16 @@ if st.session_state.documents:
     query = custom_query if custom_query else default_queries[summary_type]
     
     if st.button("Generate Summary", type="primary"):
-        with st.spinner("Generating summary..."):
-            response = summarize_content(st.session_state.documents, query, summary_type)
+        with st.spinner(f"Generating summary in {summary_language}..."):
+            response = summarize_content(
+                st.session_state.documents, 
+                query, 
+                summary_type, 
+                language_map[summary_language]
+            )
             
             if response:
-                st.subheader("📋 Summary")
+                st.subheader(f"📋 Summary ({summary_language})")
                 st.write(response['answer'])
                 
                 # Show source documents in expander
@@ -391,22 +524,29 @@ else:
 with st.expander("📖 How to use this tool"):
     st.markdown("""
     1. **🔑 Enter your Groq API Key** in the sidebar
-    2. **📥 Select your content source** from the sidebar dropdown
-    3. **📄 Provide the content** (upload file, paste URL, etc.)
-    4. **🔄 Click the load button** to process your content
-    5. **🎯 Choose summary type** or provide custom instructions
-    6. **🚀 Click 'Generate Summary'** to get your AI-powered summary
+    2. **🌍 Select your preferred summary language**
+    3. **📥 Select your content source** from the sidebar dropdown
+    4. **📄 Provide the content** (upload file, paste URL, etc.)
+    5. **🔄 Click the load button** to process your content
+    6. **🎯 Choose summary type** or provide custom instructions
+    7. **🚀 Click 'Generate Summary'** to get your AI-powered summary
+    
+    **🌍 Multilingual Support:**
+    - Supports content in any language
+    - Generates summaries in 10 different languages
+    - Automatic language detection for YouTube videos
     
     **🔧 API Key Information:**
     - **Groq API**: Free tier available at [console.groq.com](https://console.groq.com)
     - **Embeddings**: Free Hugging Face embeddings (no API key required)
     
     **📁 Supported Formats:**
-    - YouTube videos (automatic transcript extraction)
+    - YouTube videos (automatic transcript extraction in multiple languages)
     - PDF documents
     - CSV files  
     - Excel files (.xlsx, .xls)
     - Text files (.txt)
+    - JSON files (.json)
     - Web pages (via URL)
     """)
 
@@ -414,6 +554,7 @@ with st.expander("📖 How to use this tool"):
 st.markdown("---")
 st.markdown(
     "🔒 Your API key is used only for this session and is not stored | " +
-    " Built with LangChain & Streamlit",
+    "🌍 Multilingual Support | " +
+    "Powered by Groq & LangChain",
     unsafe_allow_html=True
 )
