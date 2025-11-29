@@ -37,7 +37,7 @@ This tool can summarize content from various sources including:
 """)
 
 # API Key Section in Sidebar
-st.sidebar.header("ðŸ”‘ API Configuration")
+st.sidebar.header("🔑 API Configuration")
 
 # Groq API Key input
 groq_api_key = st.sidebar.text_input(
@@ -49,7 +49,7 @@ groq_api_key = st.sidebar.text_input(
 
 # Check if API key is provided
 if not groq_api_key:
-    st.sidebar.warning("âš ï¸ Please enter your Groq API key to continue")
+    st.sidebar.warning("⚠️¸ Please enter your Groq API key to continue")
     st.stop()
 
 # Initialize LLM with user-provided API key
@@ -57,9 +57,9 @@ try:
     llm = ChatGroq(groq_api_key=groq_api_key, model_name="openai/gpt-oss-120b")
     # Test the API key with a simple call
     llm.invoke("Hello")  # Simple test to verify API key
-    st.sidebar.success("âœ… Groq API key validated!")
+    st.sidebar.success("✅ Groq API key validated!")
 except Exception as e:
-    st.sidebar.error(f"âŒ Invalid Groq API key: {str(e)}")
+    st.sidebar.error(f"❌ Invalid Groq API key: {str(e)}")
     st.stop()
 
 # Initialize Hugging Face embeddings
@@ -70,7 +70,7 @@ try:
     )
     st.sidebar.success("âœ… Hugging Face embeddings loaded!")
 except Exception as e:
-    st.sidebar.error(f"âŒ Error loading embeddings: {str(e)}")
+    st.sidebar.error(f"Error loading embeddings: {str(e)}")
     st.stop()
 
 # Updated prompt for summarization
