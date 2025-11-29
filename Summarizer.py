@@ -907,9 +907,6 @@ st.markdown(
     - Generates summaries in 10 different languages
     - Automatic language detection for YouTube videos
     
-    **🔧 API Key Information:**
-    - **Groq API**: Free tier available at [console.groq.com](https://console.groq.com)
-    - **Embeddings**: Free Hugging Face embeddings (no API key required)
     
     **📁 Supported Formats:**
     - YouTube videos (automatic transcript extraction in multiple languages)
