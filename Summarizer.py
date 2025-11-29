@@ -28,12 +28,12 @@ st.set_page_config(
 st.title("ðŸ¤– Multi-Source Intelligence Platform ")
 st.markdown("""
 This tool can summarize content from various sources including:
-- **YouTube Videos** ðŸ“¹
-- **PDF Documents** ðŸ“„  
-- **CSV Files** ðŸ“Š
-- **Excel Files** ðŸ“ˆ
-- **Text Files** ðŸ“
-- **Web Pages** ðŸŒ
+- **YouTube Videos** 📹
+- **PDF Documents** 📄
+- **CSV Files** 📊
+- **Excel Files** 📈
+- **Text Files** 📝
+- **Web Pages** 🌐
 """)
 
 # API Key Section in Sidebar
