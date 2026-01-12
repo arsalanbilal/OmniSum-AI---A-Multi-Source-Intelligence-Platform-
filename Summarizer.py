@@ -21,11 +21,11 @@ import time
 # Streamlit UI
 st.set_page_config(
     page_title="OmniSum AI",
-    page_icon="ðŸ“š",
+    page_icon="📚",  # Changed from ðŸ"š to 📚
     layout="wide"
 )
 
-st.title("ðŸ¤– Multi-Source Intelligence Platform ")
+st.title("🤖 Multi-Source Intelligence Platform ")  # Changed from ðŸ¤– to 🤖
 st.markdown("""
 This tool can summarize content from various sources including:
 - **YouTube Videos** 📹
@@ -37,7 +37,7 @@ This tool can summarize content from various sources including:
 """)
 
 # API Key Section in Sidebar
-st.sidebar.header("🔑 API Configuration")
+st.sidebar.header("🔑 API Configuration")  # Changed from ðŸ"‘ to 🔑
 
 # Groq API Key input
 groq_api_key = st.sidebar.text_input(
@@ -49,7 +49,7 @@ groq_api_key = st.sidebar.text_input(
 
 # Check if API key is provided
 if not groq_api_key:
-    st.sidebar.warning("⚠️¸ Please enter your Groq API key to continue")
+    st.sidebar.warning("⚠️ Please enter your Groq API key to continue")  # Changed from ⚠️¸ to ⚠️
     st.stop()
 
 # Initialize LLM with user-provided API key
@@ -57,9 +57,9 @@ try:
     llm = ChatGroq(groq_api_key=groq_api_key, model_name="openai/gpt-oss-120b")
     # Test the API key with a simple call
     llm.invoke("Hello")  # Simple test to verify API key
-    st.sidebar.success("✅ Groq API key validated!")
+    st.sidebar.success("✅ Groq API key validated!")  # Changed from âœ" to ✅
 except Exception as e:
-    st.sidebar.error(f"❌ Invalid Groq API key: {str(e)}")
+    st.sidebar.error(f"❌ Invalid Groq API key: {str(e)}")  # Changed from âŒ to ❌
     st.stop()
 
 # Initialize Hugging Face embeddings
@@ -68,7 +68,7 @@ try:
         model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_kwargs={'device': 'cpu'}
     )
-    st.sidebar.success("âœ… Hugging Face embeddings loaded!")
+    st.sidebar.success("✅ Hugging Face embeddings loaded!")  # Changed from âœ… to ✅
 except Exception as e:
     st.sidebar.error(f"Error loading embeddings: {str(e)}")
     st.stop()
@@ -131,20 +131,20 @@ def load_youtube_transcript(video_url):
                 metadata={"source": video_url, "title": f"YouTube Video {video_id}"}
             )]
             
-            st.success("âœ… YouTube transcript loaded successfully!")
+            st.success("✅ YouTube transcript loaded successfully!")  # Changed from âœ… to ✅
             return documents
             
         except TranscriptsDisabled:
-            st.error("âŒ No captions available for this video.")
+            st.error("❌ No captions available for this video.")  # Changed from âŒ to ❌
             return None
         except NoTranscriptFound:
-            st.error("âŒ No transcript found in the requested language.")
+            st.error("❌ No transcript found in the requested language.")  # Changed from âŒ to ❌
             return None
         except VideoUnavailable:
-            st.error("âŒ The video is unavailable.")
+            st.error("❌ The video is unavailable.")  # Changed from âŒ to ❌
             return None
         except Exception as e:
-            st.error(f"âŒ An unexpected error occurred: {str(e)}")
+            st.error(f"❌ An unexpected error occurred: {str(e)}")  # Changed from âŒ to ❌
             return None
                     
     except Exception as e:
@@ -269,7 +269,7 @@ def summarize_content(documents, query, summary_type="comprehensive"):
         return None
 
 # Sidebar for source selection
-st.sidebar.header("ðŸ“¥ Input Source")
+st.sidebar.header("📥 Input Source")  # Changed from ðŸ"¥ to 📥
 source_type = st.sidebar.selectbox(
     "Choose your content source:",
     ["YouTube Video", "PDF File", "CSV File", "Excel File", "Text File", "Web Page"]
@@ -292,7 +292,7 @@ if source_type == "YouTube Video":
                 documents = load_youtube_transcript(youtube_url)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… YouTube transcript loaded successfully! ({len(documents)} documents)")
+                    st.sidebar.success(f"✅ YouTube transcript loaded successfully! ({len(documents)} documents)")  # Changed from âœ… to ✅
 
 elif source_type == "PDF File":
     uploaded_pdf = st.sidebar.file_uploader("Upload PDF File", type=["pdf"])
@@ -302,7 +302,7 @@ elif source_type == "PDF File":
                 documents = load_pdf_file(uploaded_pdf)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… PDF content loaded successfully! ({len(documents)} pages)")
+                    st.sidebar.success(f"✅ PDF content loaded successfully! ({len(documents)} pages)")  # Changed from âœ… to ✅
 
 elif source_type == "CSV File":
     uploaded_csv = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
@@ -312,7 +312,7 @@ elif source_type == "CSV File":
                 documents = load_csv_file(uploaded_csv)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… CSV content loaded successfully! ({len(documents)} rows)")
+                    st.sidebar.success(f"✅ CSV content loaded successfully! ({len(documents)} rows)")  # Changed from âœ… to ✅
 
 elif source_type == "Excel File":
     uploaded_excel = st.sidebar.file_uploader("Upload Excel File", type=["xlsx", "xls"])
@@ -322,7 +322,7 @@ elif source_type == "Excel File":
                 documents = load_excel_file(uploaded_excel)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… Excel content loaded successfully! ({len(documents)} sheets)")
+                    st.sidebar.success(f"✅ Excel content loaded successfully! ({len(documents)} sheets)")  # Changed from âœ… to ✅
 
 elif source_type == "Text File":
     uploaded_text = st.sidebar.file_uploader("Upload Text File", type=["txt"])
@@ -332,7 +332,7 @@ elif source_type == "Text File":
                 documents = load_text_file(uploaded_text)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… Text content loaded successfully! ({len(documents)} documents)")
+                    st.sidebar.success(f"✅ Text content loaded successfully! ({len(documents)} documents)")  # Changed from âœ… to ✅
 
 elif source_type == "Web Page":
     web_url = st.sidebar.text_input("Enter Web Page URL:")
@@ -342,10 +342,10 @@ elif source_type == "Web Page":
                 documents = load_web_content(web_url)
                 if documents:
                     st.session_state.documents = documents
-                    st.sidebar.success(f"âœ… Web content loaded successfully! ({len(documents)} documents)")
+                    st.sidebar.success(f"✅ Web content loaded successfully! ({len(documents)} documents)")  # Changed from âœ… to ✅
 
 # Summary customization
-st.sidebar.header("ðŸŽ¯ Summary Options")
+st.sidebar.header("🎯 Summary Options")  # Changed from ðŸŽ¯ to 🎯
 summary_type = st.sidebar.selectbox(
     "Summary Type:",
     ["Comprehensive", "Key Points", "Bullet Points", "Executive Summary"]
@@ -358,7 +358,7 @@ custom_query = st.sidebar.text_area(
 
 # Main content area
 if st.session_state.documents:
-    st.header("ðŸ“ Generate Summary")
+    st.header("✍️ Generate Summary")  # Changed from ðŸ" to ✍️
     
     # Default queries based on summary type
     default_queries = {
@@ -375,33 +375,33 @@ if st.session_state.documents:
             response = summarize_content(st.session_state.documents, query, summary_type)
             
             if response:
-                st.subheader("ðŸ“‹ Summary")
+                st.subheader("📋 Summary")  # Changed from ðŸ"‹ to 📋
                 st.write(response['answer'])
                 
                 # Show source documents in expander
-                with st.expander("ðŸ” View Source Content Segments"):
+                with st.expander("🔍 View Source Content Segments"):  # Changed from ðŸ" to 🔍
                     for i, doc in enumerate(response['context']):
                         st.markdown(f"**Segment {i+1}:**")
                         st.write(doc.page_content)
                         st.markdown("---")
 else:
-    st.info("ðŸ‘† Please load content using the sidebar options to get started.")
+    st.info("👆 Please load content using the sidebar options to get started.")  # Changed from ðŸ'† to 👆
 
 # Instructions
-with st.expander("ðŸ“– How to use this tool"):
+with st.expander("📖 How to use this tool"):  # Changed from ðŸ"– to 📖
     st.markdown("""
-    1. **ðŸ”‘ Enter your Groq API Key** in the sidebar
-    2. **ðŸ“¥ Select your content source** from the sidebar dropdown
-    3. **ðŸ“„ Provide the content** (upload file, paste URL, etc.)
-    4. **ðŸ”„ Click the load button** to process your content
-    5. **ðŸŽ¯ Choose summary type** or provide custom instructions
-    6. **ðŸš€ Click 'Generate Summary'** to get your AI-powered summary
+    1. **🔑 Enter your Groq API Key** in the sidebar  # Changed from ðŸ"' to 🔑
+    2. **📥 Select your content source** from the sidebar dropdown  # Changed from ðŸ"¥ to 📥
+    3. **📄 Provide the content** (upload file, paste URL, etc.)  # Changed from ðŸ"„ to 📄
+    4. **🔄 Click the load button** to process your content  # Changed from ðŸ"„ to 🔄
+    5. **🎯 Choose summary type** or provide custom instructions  # Changed from ðŸŽ¯ to 🎯
+    6. **🚀 Click 'Generate Summary'** to get your AI-powered summary  # Changed from ðŸš€ to 🚀
     
-    **ðŸ”§ API Key Information:**
+    **🔧 API Key Information:**  # Changed from ðŸ"§ to 🔧
     - **Groq API**: Free tier available at [console.groq.com](https://console.groq.com)
     - **Embeddings**: Free Hugging Face embeddings (no API key required)
     
-    **ðŸ“ Supported Formats:**
+    **📋 Supported Formats:**  # Changed from ðŸ" to 📋
     - YouTube videos (automatic transcript extraction)
     - PDF documents
     - CSV files  
@@ -413,7 +413,7 @@ with st.expander("ðŸ“– How to use this tool"):
 # Footer
 st.markdown("---")
 st.markdown(
-    "ðŸ”’ Your API key is used only for this session and is not stored | " +
+    "🔒 Your API key is used only for this session and is not stored | " +  # Changed from ðŸ"' to 🔒
     " Built with LangChain & Streamlit",
     unsafe_allow_html=True
 )
