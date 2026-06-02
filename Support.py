@@ -18,7 +18,7 @@ import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # 1. Create the UI Input field
-st.sidebar.header("API Configuration")
+st.sidebar.header("🔑 API Configuration")
 api_key_input = st.sidebar.text_input("Enter Gemini API Key", type="password")
 
 # 2. Prevent the application from sending a request if the field is empty
