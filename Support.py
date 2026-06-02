@@ -162,9 +162,9 @@ compiled_engine = workflow_builder.compile()
 # =====================================================================
 # 5. ENTERPRISE STREAMLIT USER INTERFACE
 # =====================================================================
-st.set_page_config(page_title="Gemini LangGraph Engine", page_icon="♊", layout="centered")
+st.set_page_config(page_title="SentineIFlow AI", page_icon="♊", layout="centered")
 
-st.title("♊ Resilient Gemini Multi-Agent Flow")
+st.title("♊ Intelligent Customer Support Workflow Automation")
 st.caption("Orchestrated via LangGraph Framework utilizing gemini-2.5-flash")
 st.write("Demonstrating real-time error interception, structured tracking, and automatic recovery workflows.")
 
